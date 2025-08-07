@@ -161,6 +161,12 @@ async function generateDreamImage(dreamText, analysis) {
             language = window.getCurrentLanguage();
         }
         
+        // 获取选中的画风
+        const selectedStyle = document.querySelector('input[name="artStyle"]:checked');
+        const artStyle = selectedStyle ? selectedStyle.value : 'watercolor';
+        
+        console.log('选中的画风:', artStyle);
+        
         const response = await fetch('/api/generate-image', {
             method: 'POST',
             headers: {
@@ -169,7 +175,8 @@ async function generateDreamImage(dreamText, analysis) {
             body: JSON.stringify({ 
                 dream: dreamText,
                 analysis: analysis,
-                language: language
+                language: language,
+                artStyle: artStyle
             })
         });
         

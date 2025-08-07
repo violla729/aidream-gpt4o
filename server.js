@@ -286,6 +286,8 @@ app.post('/api/generate-image', async (req, res) => {
     try {
         const { dream, analysis, language = 'en', artStyle = 'watercolor' } = req.body;
         
+        console.log(`[${new Date().toISOString()}] 图像生成请求 - 画风: ${artStyle}, 语言: ${language}`);
+        
         const messages = imageGenerationMessages[language] || imageGenerationMessages.en;
         
         if (!dream) {
@@ -525,6 +527,7 @@ async function generateDallePrompt(dream, language, artStyle = 'watercolor') {
     
     // 获取选择的画风描述
     const styleDescription = getArtStylePrompt(artStyle);
+    console.log(`[${new Date().toISOString()}] 使用的画风: ${artStyle}, 画风描述: ${styleDescription.substring(0, 50)}...`);
     
     // 构建高质量的DALL-E提示词
     const dallePrompt = `Create a high-quality healing dreamscape illustration based on the following dream: "${dreamInEnglish}".
