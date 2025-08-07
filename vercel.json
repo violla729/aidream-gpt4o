@@ -18,10 +18,6 @@
       "use": "@vercel/static"
     },
     {
-      "src": "logo.svg",
-      "use": "@vercel/static"
-    },
-    {
       "src": "public/**",
       "use": "@vercel/static"
     }
@@ -42,10 +38,6 @@
     {
       "src": "/translations.js",
       "dest": "/translations.js"
-    },
-    {
-      "src": "/logo.svg",
-      "dest": "/logo.svg"
     },
     {
       "src": "/public/(.*)",
