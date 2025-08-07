@@ -290,7 +290,7 @@ function initLanguage() {
         if (translations[browserLang]) {
             currentLanguage = browserLang;
         } else {
-            currentLanguage = 'en';
+            currentLanguage = 'en'; // 默认使用英语
         }
     }
     
