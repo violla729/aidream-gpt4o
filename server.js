@@ -4,6 +4,7 @@ const axios = require('axios');
 require('dotenv').config();
 
 const app = express();
+app.use(express.json());
 const PORT = process.env.PORT || 3000;
 
 // 中间件
@@ -833,12 +834,14 @@ app.get('/api/poll-4oimage/:taskId', async (req, res) => {
     
     try {
         const taskId = req.params.taskId;
+        console.log(`[${new Date().toISOString()}] 轮询查询任务: ${taskId}`);
     
         
         // 根据4oimage API文档，使用正确的查询端点
         try {
     
             
+            console.log(`[${new Date().toISOString()}] 调用4oimage API查询任务: ${taskId}`);
             const queryResponse = await axios.get(`${FOURO_IMAGE_API_URL}/api/v1/gpt4o-image/record-info`, {
                 params: {
                     taskId: taskId
@@ -849,6 +852,7 @@ app.get('/api/poll-4oimage/:taskId', async (req, res) => {
                 },
                 timeout: 15000
             });
+            console.log(`[${new Date().toISOString()}] 4oimage API响应:`, queryResponse.data);
             
     
             
@@ -972,7 +976,10 @@ app.get('/api/4oimage-result/:taskId', async (req, res) => {
         // 内部调用轮询端点
         try {
             const baseUrl = process.env.PUBLIC_URL || `http://localhost:${PORT}`;
+            console.log(`[${new Date().toISOString()}] 内部轮询查询: ${baseUrl}/api/poll-4oimage/${taskId}`);
             const pollResponse = await axios.get(`${baseUrl}/api/poll-4oimage/${taskId}`);
+            
+            console.log(`[${new Date().toISOString()}] 轮询响应:`, pollResponse.data);
             
             if (pollResponse.data && pollResponse.data.success) {
                 return res.json({
@@ -985,9 +992,11 @@ app.get('/api/4oimage-result/:taskId', async (req, res) => {
                         source: 'active-polling'
                     }
                 });
+            } else {
+                console.log(`[${new Date().toISOString()}] 轮询未成功:`, pollResponse.data);
             }
         } catch (pollError) {
-
+            console.error(`[${new Date().toISOString()}] 内部轮询失败:`, pollError.message);
         }
         
         // 都失败了
