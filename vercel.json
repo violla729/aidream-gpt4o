@@ -4,6 +4,26 @@
     {
       "src": "server.js",
       "use": "@vercel/node"
+    },
+    {
+      "src": "styles.css",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "script.js",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "translations.js",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "logo.svg",
+      "use": "@vercel/static"
+    },
+    {
+      "src": "public/**",
+      "use": "@vercel/static"
     }
   ],
   "routes": [
@@ -22,6 +42,10 @@
     {
       "src": "/translations.js",
       "dest": "/translations.js"
+    },
+    {
+      "src": "/logo.svg",
+      "dest": "/logo.svg"
     },
     {
       "src": "/public/(.*)",
