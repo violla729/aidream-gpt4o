@@ -999,30 +999,93 @@ app.get('/api/4oimage-result/:taskId', async (req, res) => {
         // 如果没有缓存结果，尝试主动查询（轮询模式）
 
         
-        // 内部调用轮询端点
+        // 直接调用4oimage API查询结果，避免内部HTTP调用
         try {
-            const baseUrl = process.env.PUBLIC_URL || `http://localhost:${PORT}`;
-            console.log(`[${new Date().toISOString()}] 内部轮询查询: ${baseUrl}/api/poll-4oimage/${taskId}`);
-            const pollResponse = await axios.get(`${baseUrl}/api/poll-4oimage/${taskId}`);
+            console.log(`[${new Date().toISOString()}] 直接查询4oimage API: ${taskId}`);
             
-            console.log(`[${new Date().toISOString()}] 轮询响应:`, pollResponse.data);
+            const queryResponse = await axios.get(`${FOURO_IMAGE_API_URL}/api/v1/gpt4o-image/record-info`, {
+                params: {
+                    taskId: taskId
+                },
+                headers: {
+                    'Accept': 'application/json',
+                    'Authorization': `Bearer ${FOURO_IMAGE_API_KEY}`
+                },
+                timeout: 15000
+            });
             
-            if (pollResponse.data && pollResponse.data.success) {
-                return res.json({
-                    success: true,
-                    taskId: taskId,
-                    result: {
-                        taskId: taskId,
-                        imageUrl: pollResponse.data.imageUrl,
-                        status: pollResponse.data.status,
-                        source: 'active-polling'
+            console.log(`[${new Date().toISOString()}] 4oimage API直接查询响应:`, queryResponse.data);
+            
+            if (queryResponse.data && queryResponse.data.code === 200) {
+                const data = queryResponse.data.data;
+                
+                if (data.status === 'SUCCESS' && data.response && data.response.resultUrls && data.response.resultUrls.length > 0) {
+                    const imageUrl = data.response.resultUrls[0];
+                    
+                    // 保存结果到内存
+                    if (!global.imageCallbacks) {
+                        global.imageCallbacks = new Map();
                     }
-                });
+                    global.imageCallbacks.set(taskId, {
+                        taskId: taskId,
+                        imageUrl: imageUrl,
+                        status: 'completed',
+                        timestamp: new Date().toISOString(),
+                        source: '4oimageapi.io-real',
+                        allUrls: data.response.resultUrls
+                    });
+                    
+                    return res.json({
+                        success: true,
+                        taskId: taskId,
+                        result: {
+                            taskId: taskId,
+                            imageUrl: imageUrl,
+                            status: 'completed',
+                            source: 'direct-4oimage-query'
+                        }
+                    });
+                } else if (data.status === 'PROCESSING' || data.status === 'PENDING') {
+                    return res.json({
+                        success: false,
+                        taskId: taskId,
+                        status: 'processing',
+                        message: 'AI is still generating your image'
+                    });
+                } else {
+                    console.log(`[${new Date().toISOString()}] 任务状态: ${data.status}`);
+                    return res.json({
+                        success: false,
+                        taskId: taskId,
+                        status: data.status || 'error',
+                        message: data.errorMessage || 'Task status error'
+                    });
+                }
             } else {
-                console.log(`[${new Date().toISOString()}] 轮询未成功:`, pollResponse.data);
+                console.log(`[${new Date().toISOString()}] 4oimage API响应格式错误:`, queryResponse.data);
+                return res.json({
+                    success: false,
+                    taskId: taskId,
+                    message: 'Invalid response format from 4oimage API'
+                });
             }
-        } catch (pollError) {
-            console.error(`[${new Date().toISOString()}] 内部轮询失败:`, pollError.message);
+        } catch (queryError) {
+            console.error(`[${new Date().toISOString()}] 直接查询4oimage API失败:`, queryError.message);
+            
+            if (queryError.response && queryError.response.status === 404) {
+                return res.json({
+                    success: false,
+                    taskId: taskId,
+                    status: 'processing',
+                    message: 'Task still processing (404 - not found yet)'
+                });
+            }
+            
+            return res.json({
+                success: false,
+                taskId: taskId,
+                message: 'Failed to query 4oimage API: ' + queryError.message
+            });
         }
         
         // 都失败了
