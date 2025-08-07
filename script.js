@@ -353,6 +353,8 @@ function resetGenerateButton() {
 
 // 添加到Dream Gallery
 function addToDreamGallery(dreamText, imageUrl, customDate = null) {
+    console.log('addToDreamGallery被调用:', { dreamText, imageUrl, customDate });
+    
     // 隐藏占位符
     galleryPlaceholder.style.display = 'none';
     
@@ -413,6 +415,8 @@ function initMasonryLayout() {
 
 // 初始化Dream Gallery
 function initDreamGallery() {
+    console.log('开始初始化Dream Gallery...');
+    
     // 使用public/images中的所有图片，按文件名排序
     const allImages = [
         "/images/arr22.png",
@@ -532,16 +536,24 @@ function initDreamGallery() {
         };
     });
     
+    console.log('创建的gallery项目数量:', sampleDreams.length);
+    
     if (sampleDreams.length > 0) {
+        console.log('隐藏占位符，开始添加gallery项目...');
         galleryPlaceholder.style.display = 'none';
         
-        sampleDreams.forEach(dream => {
+        sampleDreams.forEach((dream, index) => {
+            console.log(`添加第${index + 1}个项目:`, dream.image);
             addToDreamGallery(dream.dream, dream.image, dream.date);
         });
         
         // 初始化瀑布流布局
-        setTimeout(() => initMasonryLayout(), 100);
+        setTimeout(() => {
+            console.log('初始化瀑布流布局...');
+            initMasonryLayout();
+        }, 100);
     } else {
+        console.log('没有gallery项目，显示占位符');
         galleryPlaceholder.style.display = 'block';
     }
 }
@@ -632,6 +644,12 @@ document.addEventListener('DOMContentLoaded', () => {
     dreamGallery = document.getElementById('dream-gallery');
     galleryGrid = document.getElementById('gallery-grid');
     galleryPlaceholder = document.getElementById('gallery-placeholder');
+    
+    console.log('Gallery元素检查:', {
+        dreamGallery: !!dreamGallery,
+        galleryGrid: !!galleryGrid,
+        galleryPlaceholder: !!galleryPlaceholder
+    });
     
     // 初始化语言
     initLanguage();
