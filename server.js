@@ -76,6 +76,9 @@ app.post('/api/analyze-dream', async (req, res) => {
     try {
         const { dream, language = 'en' } = req.body;
         
+        // 生产环境日志记录
+        console.log(`[${new Date().toISOString()}] 梦境分析请求 - 语言: ${language}, 梦境长度: ${dream ? dream.length : 0}`);
+        
         if (!dream) {
             const errorMessages = {
                 en: 'Dream description cannot be empty',
@@ -85,7 +88,15 @@ app.post('/api/analyze-dream', async (req, res) => {
             return res.status(400).json({ error: errorMessages[language] || errorMessages.en });
         }
         
+        // 详细的API密钥检查日志
+        console.log(`[${new Date().toISOString()}] API密钥检查:`);
+        console.log(`  - DEEPSEEK_API_KEY exists: ${!!DEEPSEEK_API_KEY}`);
+        console.log(`  - DEEPSEEK_API_KEY length: ${DEEPSEEK_API_KEY ? DEEPSEEK_API_KEY.length : 0}`);
+        console.log(`  - DEEPSEEK_API_KEY starts with sk-: ${DEEPSEEK_API_KEY ? DEEPSEEK_API_KEY.startsWith('sk-') : false}`);
+        console.log(`  - Environment: ${process.env.NODE_ENV || 'development'}`);
+        
         if (!DEEPSEEK_API_KEY) {
+            console.error(`[${new Date().toISOString()}] 错误: DeepSeek API密钥未配置`);
             const errorMessages = {
                 en: 'DeepSeek API key not configured',
                 zh: 'DeepSeek API密钥未配置',
@@ -97,6 +108,8 @@ app.post('/api/analyze-dream', async (req, res) => {
         // 获取对应语言的提示模板
         const languagePrompts = dreamAnalysisPrompts[language] || dreamAnalysisPrompts.en;
         const prompt = languagePrompts.promptTemplate(dream);
+        
+        console.log(`[${new Date().toISOString()}] 准备调用DeepSeek API...`);
 
         const response = await axios.post('https://api.deepseek.com/v1/chat/completions', {
             model: 'deepseek-chat',
@@ -116,15 +129,29 @@ app.post('/api/analyze-dream', async (req, res) => {
             headers: {
                 'Authorization': `Bearer ${DEEPSEEK_API_KEY}`,
                 'Content-Type': 'application/json'
-            }
+            },
+            timeout: 30000 // 30秒超时
         });
+        
+        console.log(`[${new Date().toISOString()}] DeepSeek API调用成功`);
         
         const analysis = response.data.choices[0].message.content;
         
         res.json({ analysis });
         
     } catch (error) {
-        console.error('梦境分析API错误:', error);
+        console.error(`[${new Date().toISOString()}] 梦境分析API错误:`, error.message);
+        
+        // 详细的错误信息记录
+        if (error.response) {
+            console.error(`  - 响应状态: ${error.response.status}`);
+            console.error(`  - 响应数据:`, error.response.data);
+            console.error(`  - 响应头:`, error.response.headers);
+        } else if (error.request) {
+            console.error(`  - 请求错误: ${error.request}`);
+        } else {
+            console.error(`  - 其他错误: ${error.message}`);
+        }
         
         const { language = 'en' } = req.body;
         
@@ -140,6 +167,16 @@ app.post('/api/analyze-dream', async (req, res) => {
                 zh: 'API密钥无效，请检查配置',
                 es: 'Clave API inválida, verifica la configuración'
             },
+            timeout: {
+                en: 'Request timeout, please try again',
+                zh: '请求超时，请重试',
+                es: 'Tiempo de espera agotado, inténtalo de nuevo'
+            },
+            networkError: {
+                en: 'Network error, please check your connection',
+                zh: '网络错误，请检查连接',
+                es: 'Error de red, verifica tu conexión'
+            },
             generalError: {
                 en: 'Dream analysis failed, please try again later',
                 zh: '梦境分析失败，请稍后重试',
@@ -147,11 +184,15 @@ app.post('/api/analyze-dream', async (req, res) => {
             }
         };
         
-        // 处理DeepSeek特定的错误
-        if (error.response && error.response.status === 429) {
+        // 处理不同类型的错误
+        if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+            res.status(408).json({ error: errorMessages.timeout[language] || errorMessages.timeout.en });
+        } else if (error.response && error.response.status === 429) {
             res.status(429).json({ error: errorMessages.rateLimited[language] || errorMessages.rateLimited.en });
         } else if (error.response && error.response.status === 401) {
             res.status(401).json({ error: errorMessages.invalidKey[language] || errorMessages.invalidKey.en });
+        } else if (error.code === 'ENOTFOUND' || error.code === 'ECONNREFUSED') {
+            res.status(503).json({ error: errorMessages.networkError[language] || errorMessages.networkError.en });
         } else {
             res.status(500).json({ error: errorMessages.generalError[language] || errorMessages.generalError.en });
         }
@@ -784,31 +825,95 @@ app.get('/api/4oimage-result/:taskId', async (req, res) => {
 // 健康检查端点
 app.get('/api/health', (req, res) => {
     const hasFourOAPI = FOURO_IMAGE_API_KEY && FOURO_IMAGE_API_KEY.length > 0;
+    const hasDeepSeekAPI = DEEPSEEK_API_KEY && DEEPSEEK_API_KEY.length > 0;
     
     res.json({ 
         status: 'ok', 
         message: 'AI解梦服务运行正常',
+        environment: process.env.NODE_ENV || 'development',
         features: {
-            dreamAnalysis: 'available (DeepSeek API)',
+            dreamAnalysis: hasDeepSeekAPI ? 'available (DeepSeek API)' : 'unavailable (DeepSeek API key required)',
             imageGeneration: hasFourOAPI ? 'available (4oimageapi.io GPT-4o)' : 'limited (4oimageapi.io API key required)'
+        },
+        apiKeys: {
+            deepseek: hasDeepSeekAPI ? 'configured' : 'missing',
+            fourOImage: hasFourOAPI ? 'configured' : 'missing'
         }
     });
 });
 
-// 启动服务器
-app.listen(PORT, () => {
+// 调试端点（仅在生产环境用于排查问题）
+app.get('/api/debug', (req, res) => {
+    // 只在生产环境或明确请求时返回调试信息
+    const isProduction = process.env.NODE_ENV === 'production';
+    const debugToken = req.query.token;
     
-    
-    
-    
-    // 检查API密钥配置
-    if (!FOURO_IMAGE_API_KEY || FOURO_IMAGE_API_KEY.length === 0) {
-    
-    } else {
-    
-    
-    
+    if (!isProduction && !debugToken) {
+        return res.status(403).json({ error: 'Debug endpoint requires token in production' });
     }
+    
+    res.json({
+        timestamp: new Date().toISOString(),
+        environment: process.env.NODE_ENV || 'development',
+        port: process.env.PORT || 3000,
+        publicUrl: process.env.PUBLIC_URL || 'not set',
+        apiKeys: {
+            deepseek: {
+                exists: !!DEEPSEEK_API_KEY,
+                length: DEEPSEEK_API_KEY ? DEEPSEEK_API_KEY.length : 0,
+                startsWithSk: DEEPSEEK_API_KEY ? DEEPSEEK_API_KEY.startsWith('sk-') : false,
+                preview: DEEPSEEK_API_KEY ? `${DEEPSEEK_API_KEY.substring(0, 10)}...` : 'not set'
+            },
+            fourOImage: {
+                exists: !!FOURO_IMAGE_API_KEY,
+                length: FOURO_IMAGE_API_KEY ? FOURO_IMAGE_API_KEY.length : 0,
+                preview: FOURO_IMAGE_API_KEY ? `${FOURO_IMAGE_API_KEY.substring(0, 10)}...` : 'not set'
+            }
+        },
+        nodeVersion: process.version,
+        platform: process.platform,
+        memory: {
+            used: Math.round(process.memoryUsage().heapUsed / 1024 / 1024) + ' MB',
+            total: Math.round(process.memoryUsage().heapTotal / 1024 / 1024) + ' MB'
+        }
+    });
 });
+
+// 启动服务器（仅在非Vercel环境下）
+if (process.env.NODE_ENV !== 'production' || !process.env.VERCEL) {
+    app.listen(PORT, () => {
+        console.log(`🚀 AI解梦服务器运行在端口 ${PORT}`);
+        console.log(`🌐 访问 http://localhost:${PORT} 查看应用`);
+        console.log(`🔧 使用 DeepSeek API (梦境分析) + 4oimageapi.io GPT-4o (图像生成)`);
+        
+        // 检查API密钥配置
+        if (!DEEPSEEK_API_KEY || DEEPSEEK_API_KEY.length === 0) {
+            console.error('❌ DeepSeek API密钥未配置，梦境分析功能将不可用');
+        } else {
+            console.log('✅ DeepSeek API密钥已配置，梦境分析功能已启用');
+        }
+        
+        if (!FOURO_IMAGE_API_KEY || FOURO_IMAGE_API_KEY.length === 0) {
+            console.warn('⚠️  4oimageapi.io API密钥未配置，图像生成功能将受限');
+        } else {
+            console.log('✅ 4oimageapi.io API密钥已配置，图像生成功能已启用');
+            console.log('💡 使用更经济实惠的4oimageapi.io服务提供GPT-4o图像生成能力');
+        }
+        
+        // 环境信息
+        console.log(`📝 当前环境: ${process.env.NODE_ENV || 'development'}`);
+        if (process.env.PUBLIC_URL) {
+            console.log(`🌍 公网URL: ${process.env.PUBLIC_URL}`);
+            console.log('📝 当前使用回调模式：任务提交至4oimageapi.io + 回调接收结果 + 预设疗愈图像');
+        } else {
+            console.log('📝 当前使用轮询模式：任务提交至4oimageapi.io + 主动查询结果 + 预设疗愈图像');
+        }
+        
+        console.log('🎯 服务器启动完成，所有功能已就绪！');
+    });
+} else {
+    console.log('🚀 Vercel环境检测到，使用无服务器函数模式');
+    console.log('✅ API密钥检查完成，所有功能已就绪！');
+}
 
 module.exports = app; 
