@@ -7,8 +7,43 @@ const app = express();
 const PORT = process.env.PORT || 3000;
 
 // 中间件
-app.use(cors());
+app.use(cors({
+    origin: function (origin, callback) {
+        // 允许所有来源，包括Vercel部署的域名
+        const allowedOrigins = [
+            'https://aidream-gpt4o.vercel.app',
+            'https://aidream-gpt4o-7prxsvhme-viollas-projects-ff16aef5.vercel.app',
+            'http://localhost:3000',
+            'http://localhost:3001'
+        ];
+        
+        // 允许没有origin的请求（比如移动端应用）
+        if (!origin) return callback(null, true);
+        
+        if (allowedOrigins.indexOf(origin) !== -1) {
+            callback(null, true);
+        } else {
+            // 在生产环境中，允许所有Vercel域名
+            if (process.env.NODE_ENV === 'production' && origin.includes('vercel.app')) {
+                callback(null, true);
+            } else {
+                callback(null, true); // 临时允许所有来源
+            }
+        }
+    },
+    credentials: true,
+    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
+    allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With']
+}));
 app.use(express.json());
+
+// 处理OPTIONS预检请求
+app.options('*', (req, res) => {
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+    res.status(200).end();
+});
 
 // 静态文件服务 - 适配Vercel环境
 const path = require('path');
@@ -283,6 +318,11 @@ const imageGenerationMessages = {
 
 // 图像生成API - 使用多种方案
 app.post('/api/generate-image', async (req, res) => {
+    // 设置CORS头
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    
     try {
         const { dream, analysis, language = 'en', artStyle = 'watercolor' } = req.body;
         
@@ -786,6 +826,11 @@ app.post('/api/test-callback/:taskId', async (req, res) => {
 
 // 主动查询4oimageapi.io任务状态（轮询模式）
 app.get('/api/poll-4oimage/:taskId', async (req, res) => {
+    // 设置CORS头
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    
     try {
         const taskId = req.params.taskId;
     
@@ -900,6 +945,11 @@ app.get('/api/poll-4oimage/:taskId', async (req, res) => {
 
 // 查询4oimageapi.io任务结果端点（统一入口）
 app.get('/api/4oimage-result/:taskId', async (req, res) => {
+    // 设置CORS头
+    res.header('Access-Control-Allow-Origin', '*');
+    res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
+    res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    
     try {
         const taskId = req.params.taskId;
     
