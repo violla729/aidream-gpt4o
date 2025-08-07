@@ -43,6 +43,12 @@ app.options('*', (req, res) => {
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
     res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization, X-Requested-With');
+    
+    // 禁用缓存
+    res.header('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.header('Pragma', 'no-cache');
+    res.header('Expires', '0');
+    
     res.status(200).end();
 });
 
@@ -131,6 +137,11 @@ IMPORTANTE: Tu respuesta debe ser COMPLETAMENTE en español. No uses ninguna pal
 
 // DeepSeek梦境解析API
 app.post('/api/analyze-dream', async (req, res) => {
+    // 禁用缓存，确保每次请求都执行服务器代码
+    res.header('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.header('Pragma', 'no-cache');
+    res.header('Expires', '0');
+    
     try {
         const { dream, language = 'en' } = req.body;
         
@@ -323,6 +334,11 @@ app.post('/api/generate-image', async (req, res) => {
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    
+    // 禁用缓存，确保每次请求都执行服务器代码
+    res.header('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.header('Pragma', 'no-cache');
+    res.header('Expires', '0');
     
     try {
         const { dream, analysis, language = 'en', artStyle = 'watercolor' } = req.body;
@@ -832,6 +848,11 @@ app.get('/api/poll-4oimage/:taskId', async (req, res) => {
     res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
     
+    // 禁用缓存，确保每次请求都执行服务器代码
+    res.header('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.header('Pragma', 'no-cache');
+    res.header('Expires', '0');
+    
     try {
         const taskId = req.params.taskId;
         console.log(`[${new Date().toISOString()}] 轮询查询任务: ${taskId}`);
@@ -953,6 +974,11 @@ app.get('/api/4oimage-result/:taskId', async (req, res) => {
     res.header('Access-Control-Allow-Origin', '*');
     res.header('Access-Control-Allow-Methods', 'GET, POST, OPTIONS');
     res.header('Access-Control-Allow-Headers', 'Content-Type, Authorization');
+    
+    // 禁用缓存，确保每次请求都执行服务器代码
+    res.header('Cache-Control', 'no-cache, no-store, must-revalidate');
+    res.header('Pragma', 'no-cache');
+    res.header('Expires', '0');
     
     try {
         const taskId = req.params.taskId;
