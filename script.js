@@ -107,7 +107,7 @@ async function handleImageGeneration() {
     if (currentButtonText === 'Regenerate' || currentButtonText === '重新生成') {
         generateImageBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span data-translate="regenerating-text">Regenerating...</span>';
     } else {
-        generateImageBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span data-translate="generating-text">Generating...</span>';
+    generateImageBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> <span data-translate="generating-text">Generating...</span>';
     }
     
     try {
@@ -126,13 +126,13 @@ async function handleImageGeneration() {
             
         } else if (result.imageUrl) {
             // 直接显示结果（其他来源的图片）
-            displayGeneratedImage(result.imageUrl);
-            
-            // 显示相应的消息
-            if (result.message) {
-                showNotification(result.message, 'info');
-            } else {
-                showNotification(getTranslation('success-image-generated'), 'success');
+        displayGeneratedImage(result.imageUrl);
+        
+        // 显示相应的消息
+        if (result.message) {
+            showNotification(result.message, 'info');
+        } else {
+            showNotification(getTranslation('success-image-generated'), 'success');
             }
         } else {
             // 没有图片URL的情况
@@ -231,10 +231,10 @@ function displayGeneratedImage(imageUrl) {
     }
     
     if (imageContainer) {
-        imageContainer.innerHTML = `
+    imageContainer.innerHTML = `
             <div class="generated-image-container">
                 <div class="image-wrapper">
-                    <img src="${imageUrl}" alt="梦境图像" class="generated-image" onload="this.style.opacity='1'">
+        <img src="${imageUrl}" alt="梦境图像" class="generated-image" onload="this.style.opacity='1'">
                     <div class="watermark">by Moon Zen AI</div>
                 </div>
             </div>
@@ -668,19 +668,19 @@ document.addEventListener('DOMContentLoaded', () => {
             // console.log('语言切换按钮被点击');
             toggleLanguageDropdown(e);
         });
-        document.addEventListener('click', handleLanguageDropdownClick);
-        
-        const languageOptions = document.querySelectorAll('.language-option');
+    document.addEventListener('click', handleLanguageDropdownClick);
+    
+    const languageOptions = document.querySelectorAll('.language-option');
         // console.log('找到语言选项数量:', languageOptions.length);
-        
-        languageOptions.forEach(option => {
-            option.addEventListener('click', (e) => {
+    
+    languageOptions.forEach(option => {
+        option.addEventListener('click', (e) => {
                 // console.log('语言选项被点击:', option.dataset.lang);
-                e.preventDefault();
-                e.stopPropagation();
-                selectLanguage(option.dataset.lang);
-            });
+            e.preventDefault();
+            e.stopPropagation();
+            selectLanguage(option.dataset.lang);
         });
+    });
     } else {
         console.error('语言切换按钮未找到！');
     }
