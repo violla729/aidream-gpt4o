@@ -145,14 +145,16 @@ app.post('/api/analyze-dream', async (req, res) => {
                     content: prompt
                 }
             ],
-            max_tokens: 1000,
+            max_tokens: 800, // 减少token数量以加快响应
             temperature: 0.7
         }, {
             headers: {
                 'Authorization': `Bearer ${DEEPSEEK_API_KEY}`,
                 'Content-Type': 'application/json'
             },
-            timeout: 30000 // 30秒超时
+            timeout: 60000, // 增加到60秒超时
+            retry: 1, // 添加重试机制
+            retryDelay: 1000
         });
         
         console.log(`[${new Date().toISOString()}] DeepSeek API调用成功`);
@@ -899,6 +901,62 @@ app.get('/api/debug', (req, res) => {
             total: Math.round(process.memoryUsage().heapTotal / 1024 / 1024) + ' MB'
         }
     });
+});
+
+// 测试DeepSeek API连接
+app.get('/api/test-deepseek', async (req, res) => {
+    try {
+        if (!DEEPSEEK_API_KEY) {
+            return res.status(500).json({ error: 'DeepSeek API key not configured' });
+        }
+        
+        console.log('测试DeepSeek API连接...');
+        
+        const response = await axios.post('https://api.deepseek.com/v1/chat/completions', {
+            model: 'deepseek-chat',
+            messages: [
+                {
+                    role: 'user',
+                    content: 'Hello, this is a test message.'
+                }
+            ],
+            max_tokens: 50,
+            temperature: 0.7
+        }, {
+            headers: {
+                'Authorization': `Bearer ${DEEPSEEK_API_KEY}`,
+                'Content-Type': 'application/json'
+            },
+            timeout: 30000
+        });
+        
+        res.json({ 
+            success: true, 
+            message: 'DeepSeek API connection successful',
+            response: response.data.choices[0].message.content
+        });
+        
+    } catch (error) {
+        console.error('DeepSeek API测试失败:', error.message);
+        
+        if (error.response) {
+            res.status(error.response.status).json({ 
+                error: 'DeepSeek API test failed', 
+                status: error.response.status,
+                data: error.response.data 
+            });
+        } else if (error.request) {
+            res.status(503).json({ 
+                error: 'Network error - DeepSeek API unreachable',
+                message: error.message 
+            });
+        } else {
+            res.status(500).json({ 
+                error: 'DeepSeek API test failed',
+                message: error.message 
+            });
+        }
+    }
 });
 
 // 启动服务器（仅在非Vercel环境下）
