@@ -9,8 +9,29 @@ const PORT = process.env.PORT || 3000;
 // 中间件
 app.use(cors());
 app.use(express.json());
-app.use(express.static('.'));
-app.use(express.static('public')); // 支持 /images/ 路径访问图片
+
+// 静态文件服务 - 适配Vercel环境
+const path = require('path');
+app.use(express.static(path.join(__dirname)));
+app.use('/public', express.static(path.join(__dirname, 'public')));
+
+// 根路径处理 - 确保index.html能被正确访问
+app.get('/', (req, res) => {
+    res.sendFile(path.join(__dirname, 'index.html'));
+});
+
+// 确保其他静态文件也能被访问
+app.get('/styles.css', (req, res) => {
+    res.sendFile(path.join(__dirname, 'styles.css'));
+});
+
+app.get('/script.js', (req, res) => {
+    res.sendFile(path.join(__dirname, 'script.js'));
+});
+
+app.get('/translations.js', (req, res) => {
+    res.sendFile(path.join(__dirname, 'translations.js'));
+});
 
 // 环境变量配置
 const DEEPSEEK_API_KEY = process.env.DEEPSEEK_API_KEY;
