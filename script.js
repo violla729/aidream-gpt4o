@@ -63,7 +63,9 @@ async function analyzeDream(dreamText) {
             language = window.getCurrentLanguage();
         }
         
-        const response = await fetch('/api/analyze-dream', {
+        // 在Vercel环境中使用完整的API URL
+        const apiBaseUrl = window.location.origin;
+        const response = await fetch(`${apiBaseUrl}/api/analyze-dream`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -167,7 +169,11 @@ async function generateDreamImage(dreamText, analysis) {
         
         console.log('选中的画风:', artStyle);
         
-        const response = await fetch('/api/generate-image', {
+        // 在Vercel环境中使用完整的API URL
+        const apiBaseUrl = window.location.origin;
+        console.log('API基础URL:', apiBaseUrl);
+        console.log('完整请求URL:', `${apiBaseUrl}/api/generate-image`);
+        const response = await fetch(`${apiBaseUrl}/api/generate-image`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -262,7 +268,8 @@ async function poll4oimageResult(taskId) {
     
             
             // 查询任务结果
-            const response = await fetch(`/api/4oimage-result/${taskId}`);
+            const apiBaseUrl = window.location.origin;
+            const response = await fetch(`${apiBaseUrl}/api/4oimage-result/${taskId}`);
             const data = await response.json();
             
             if (data.success && data.result && data.result.imageUrl) {
