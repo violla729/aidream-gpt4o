@@ -879,6 +879,42 @@ body {
     letter-spacing: 0.5px;
 }
 
+/* 懒加载占位符样式 */
+.gallery-item-placeholder {
+    width: 100%;
+    height: 300px;
+    background: linear-gradient(135deg, #f5f7fa 0%, #c3cfe2 100%);
+    border-radius: 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    overflow: hidden;
+}
+
+.placeholder-spinner {
+    width: 40px;
+    height: 40px;
+    border: 3px solid rgba(93, 53, 135, 0.2);
+    border-top: 3px solid #5D3587;
+    border-radius: 50%;
+    animation: spin 1s linear infinite;
+    margin-bottom: 15px;
+}
+
+.placeholder-text {
+    font-family: 'Sora', sans-serif;
+    font-size: 0.9rem;
+    color: #5D3587;
+    font-weight: 500;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+}
+
 .gallery-placeholder {
     text-align: center;
     padding: 60px 20px;

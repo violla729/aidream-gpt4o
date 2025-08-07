@@ -299,7 +299,7 @@ app.post('/api/generate-image', async (req, res) => {
             }
 
             // 生成适合GPT-4o的英文提示词
-            const gpt4oPrompt = generateDallePrompt(dream, language, artStyle);
+            const gpt4oPrompt = await generateDallePrompt(dream, language, artStyle);
             
     
 
@@ -510,17 +510,17 @@ function getArtStylePrompt(artStyle) {
 }
 
 // 生成适合DALL-E的图像提示词
-function generateDallePrompt(dream, language, artStyle = 'watercolor') {
+async function generateDallePrompt(dream, language, artStyle = 'watercolor') {
     // 将梦境描述转换为英文（DALL-E在英文提示词下效果最佳）
     let dreamInEnglish = dream;
     
-    // 如果是其他语言，提供一个基础的英文转换提示
+    // 如果是其他语言，调用DeepSeek API进行翻译
     if (language === 'zh') {
-        // 对于中文梦境，提取关键元素并构建英文提示
-        dreamInEnglish = translateChineseDreamToEnglish(dream);
+        // 对于中文梦境，使用DeepSeek API翻译
+        dreamInEnglish = await translateChineseDreamToEnglish(dream);
     } else if (language === 'es') {
-        // 对于西班牙语梦境，提取关键元素并构建英文提示
-        dreamInEnglish = translateSpanishDreamToEnglish(dream);
+        // 对于西班牙语梦境，使用DeepSeek API翻译
+        dreamInEnglish = await translateSpanishDreamToEnglish(dream);
     }
     
     // 获取选择的画风描述
@@ -547,64 +547,142 @@ ${styleDescription}
     return dallePrompt;
 }
 
-// 辅助函数：将中文梦境转换为英文关键词
-function translateChineseDreamToEnglish(dream) {
-    const dreamLower = dream.toLowerCase();
-    let englishElements = [];
-    
-    if (dreamLower.includes('飞') || dreamLower.includes('飞翔')) {
-        englishElements.push('flying through the sky');
+// 辅助函数：将中文梦境转换为英文（使用DeepSeek API）
+async function translateChineseDreamToEnglish(dream) {
+    try {
+        console.log(`[${new Date().toISOString()}] 开始翻译中文梦境: ${dream.substring(0, 50)}...`);
+        
+        const response = await axios.post('https://api.deepseek.com/v1/chat/completions', {
+            model: 'deepseek-chat',
+            messages: [
+                {
+                    role: 'system',
+                    content: 'You are a professional translator specializing in dream interpretation. Your task is to translate Chinese dream descriptions into natural, fluent English that preserves the emotional and symbolic meaning of the dream. Focus on creating vivid, descriptive English text that would be suitable for AI image generation.'
+                },
+                {
+                    role: 'user',
+                    content: `Please translate the following Chinese dream description into natural, fluent English. Make sure to preserve the emotional tone and symbolic meaning, and create vivid imagery suitable for AI image generation:
+
+Chinese dream: "${dream}"
+
+Please provide only the English translation, without any explanations or additional text.`
+                }
+            ],
+            max_tokens: 300,
+            temperature: 0.7
+        }, {
+            headers: {
+                'Authorization': `Bearer ${DEEPSEEK_API_KEY}`,
+                'Content-Type': 'application/json'
+            },
+            timeout: 30000
+        });
+        
+        const translation = response.data.choices[0].message.content.trim();
+        console.log(`[${new Date().toISOString()}] 中文梦境翻译完成: ${translation.substring(0, 50)}...`);
+        
+        return translation;
+        
+    } catch (error) {
+        console.error(`[${new Date().toISOString()}] 中文梦境翻译失败:`, error.message);
+        
+        // 如果翻译失败，回退到关键词匹配
+        const dreamLower = dream.toLowerCase();
+        let englishElements = [];
+        
+        if (dreamLower.includes('飞') || dreamLower.includes('飞翔')) {
+            englishElements.push('flying through the sky');
+        }
+        if (dreamLower.includes('花') || dreamLower.includes('花园')) {
+            englishElements.push('beautiful garden with colorful flowers');
+        }
+        if (dreamLower.includes('海') || dreamLower.includes('水')) {
+            englishElements.push('peaceful ocean or flowing water');
+        }
+        if (dreamLower.includes('森林') || dreamLower.includes('树')) {
+            englishElements.push('enchanted forest with tall trees');
+        }
+        if (dreamLower.includes('天空') || dreamLower.includes('云')) {
+            englishElements.push('expansive sky with soft clouds');
+        }
+        if (dreamLower.includes('动物')) {
+            englishElements.push('gentle animals');
+        }
+        if (dreamLower.includes('光') || dreamLower.includes('阳光')) {
+            englishElements.push('warm golden light');
+        }
+        
+        return englishElements.length > 0 ? englishElements.join(', ') : 'a peaceful and beautiful dreamscape';
     }
-    if (dreamLower.includes('花') || dreamLower.includes('花园')) {
-        englishElements.push('beautiful garden with colorful flowers');
-    }
-    if (dreamLower.includes('海') || dreamLower.includes('水')) {
-        englishElements.push('peaceful ocean or flowing water');
-    }
-    if (dreamLower.includes('森林') || dreamLower.includes('树')) {
-        englishElements.push('enchanted forest with tall trees');
-    }
-    if (dreamLower.includes('天空') || dreamLower.includes('云')) {
-        englishElements.push('expansive sky with soft clouds');
-    }
-    if (dreamLower.includes('动物')) {
-        englishElements.push('gentle animals');
-    }
-    if (dreamLower.includes('光') || dreamLower.includes('阳光')) {
-        englishElements.push('warm golden light');
-    }
-    
-    return englishElements.length > 0 ? englishElements.join(', ') : 'a peaceful and beautiful dreamscape';
 }
 
-// 辅助函数：将西班牙语梦境转换为英文关键词
-function translateSpanishDreamToEnglish(dream) {
-    const dreamLower = dream.toLowerCase();
-    let englishElements = [];
-    
-    if (dreamLower.includes('volar') || dreamLower.includes('volando')) {
-        englishElements.push('flying through the sky');
+// 辅助函数：将西班牙语梦境转换为英文（使用DeepSeek API）
+async function translateSpanishDreamToEnglish(dream) {
+    try {
+        console.log(`[${new Date().toISOString()}] 开始翻译西班牙语梦境: ${dream.substring(0, 50)}...`);
+        
+        const response = await axios.post('https://api.deepseek.com/v1/chat/completions', {
+            model: 'deepseek-chat',
+            messages: [
+                {
+                    role: 'system',
+                    content: 'You are a professional translator specializing in dream interpretation. Your task is to translate Spanish dream descriptions into natural, fluent English that preserves the emotional and symbolic meaning of the dream. Focus on creating vivid, descriptive English text that would be suitable for AI image generation.'
+                },
+                {
+                    role: 'user',
+                    content: `Please translate the following Spanish dream description into natural, fluent English. Make sure to preserve the emotional tone and symbolic meaning, and create vivid imagery suitable for AI image generation:
+
+Spanish dream: "${dream}"
+
+Please provide only the English translation, without any explanations or additional text.`
+                }
+            ],
+            max_tokens: 300,
+            temperature: 0.7
+        }, {
+            headers: {
+                'Authorization': `Bearer ${DEEPSEEK_API_KEY}`,
+                'Content-Type': 'application/json'
+            },
+            timeout: 30000
+        });
+        
+        const translation = response.data.choices[0].message.content.trim();
+        console.log(`[${new Date().toISOString()}] 西班牙语梦境翻译完成: ${translation.substring(0, 50)}...`);
+        
+        return translation;
+        
+    } catch (error) {
+        console.error(`[${new Date().toISOString()}] 西班牙语梦境翻译失败:`, error.message);
+        
+        // 如果翻译失败，回退到关键词匹配
+        const dreamLower = dream.toLowerCase();
+        let englishElements = [];
+        
+        if (dreamLower.includes('volar') || dreamLower.includes('volando')) {
+            englishElements.push('flying through the sky');
+        }
+        if (dreamLower.includes('jardín') || dreamLower.includes('flores')) {
+            englishElements.push('beautiful garden with colorful flowers');
+        }
+        if (dreamLower.includes('océano') || dreamLower.includes('agua') || dreamLower.includes('mar')) {
+            englishElements.push('peaceful ocean or flowing water');
+        }
+        if (dreamLower.includes('bosque') || dreamLower.includes('árboles')) {
+            englishElements.push('enchanted forest with tall trees');
+        }
+        if (dreamLower.includes('cielo') || dreamLower.includes('nubes')) {
+            englishElements.push('expansive sky with soft clouds');
+        }
+        if (dreamLower.includes('animales')) {
+            englishElements.push('gentle animals');
+        }
+        if (dreamLower.includes('luz') || dreamLower.includes('sol')) {
+            englishElements.push('warm golden light');
+        }
+        
+        return englishElements.length > 0 ? englishElements.join(', ') : 'a peaceful and beautiful dreamscape';
     }
-    if (dreamLower.includes('jardín') || dreamLower.includes('flores')) {
-        englishElements.push('beautiful garden with colorful flowers');
-    }
-    if (dreamLower.includes('océano') || dreamLower.includes('agua') || dreamLower.includes('mar')) {
-        englishElements.push('peaceful ocean or flowing water');
-    }
-    if (dreamLower.includes('bosque') || dreamLower.includes('árboles')) {
-        englishElements.push('enchanted forest with tall trees');
-    }
-    if (dreamLower.includes('cielo') || dreamLower.includes('nubes')) {
-        englishElements.push('expansive sky with soft clouds');
-    }
-    if (dreamLower.includes('animales')) {
-        englishElements.push('gentle animals');
-    }
-    if (dreamLower.includes('luz') || dreamLower.includes('sol')) {
-        englishElements.push('warm golden light');
-    }
-    
-    return englishElements.length > 0 ? englishElements.join(', ') : 'a peaceful and beautiful dreamscape';
 }
 
 // 辅助函数：根据梦境内容生成图像搜索关键词（备用方案使用）
