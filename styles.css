@@ -764,6 +764,7 @@ body {
     column-count: 4;
     column-gap: 20px;
     margin-bottom: 30px;
+    column-fill: balance;
 }
 
 .gallery-item {
@@ -778,23 +779,48 @@ body {
     width: 100%;
     margin-bottom: 20px;
     break-inside: avoid;
+    page-break-inside: avoid;
 }
 
-/* Grid布局下的轻微旋转效果 */
-.gallery-item:nth-child(4n+2) {
-    transform: rotate(0.5deg);
-}
-
-.gallery-item:nth-child(4n+3) {
-    transform: rotate(-0.3deg);
-}
-
-.gallery-item:nth-child(6n+1) {
+/* 交错瀑布流效果 - 不同高度的随机旋转 */
+.gallery-item:nth-child(4n+1) {
     transform: rotate(0.8deg);
 }
 
+.gallery-item:nth-child(4n+2) {
+    transform: rotate(-0.5deg);
+}
+
+.gallery-item:nth-child(4n+3) {
+    transform: rotate(0.3deg);
+}
+
+.gallery-item:nth-child(4n+4) {
+    transform: rotate(-0.7deg);
+}
+
+.gallery-item:nth-child(6n+1) {
+    transform: rotate(1.2deg);
+}
+
+.gallery-item:nth-child(6n+2) {
+    transform: rotate(-0.9deg);
+}
+
 .gallery-item:nth-child(8n+1) {
-    transform: rotate(-0.4deg);
+    transform: rotate(0.6deg);
+}
+
+.gallery-item:nth-child(8n+3) {
+    transform: rotate(-1.1deg);
+}
+
+.gallery-item:nth-child(10n+1) {
+    transform: rotate(0.4deg);
+}
+
+.gallery-item:nth-child(10n+5) {
+    transform: rotate(-0.8deg);
 }
 
 .gallery-item:hover {

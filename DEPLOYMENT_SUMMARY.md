@@ -13,7 +13,7 @@
 - **后端**: Node.js + Express
 - **前端**: 原生JavaScript + CSS3
 - **AI服务**: DeepSeek API + 4oimageapi.io
-- **部署**: Vercel (推荐) / Railway
+- **部署**: Vercel
 
 ## 功能特性
 

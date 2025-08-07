@@ -413,119 +413,124 @@ function initMasonryLayout() {
 
 // 初始化Dream Gallery
 function initDreamGallery() {
-    // 专属使用你的精美艺术作品 - 全部22张图片按时间倒序排列
-    const sampleDreams = [
-        {
-            dream: "I dreamed of an ethereal garden where time flows like water",
-            image: "/images/arr22.png",
-            date: "2025-01-26"
-        },
-        {
-            dream: "梦见在神秘的极光下与星辰对话",
-            image: "/images/art16.png",
-            date: "2025-01-25"
-        },
-        {
-            dream: "I dreamed of an artist's sanctuary filled with crystals and creativity",
-            image: "/images/art4.png",
-            date: "2025-01-24"
-        },
-        {
-            dream: "Soñé con un reino celestial donde la música crea colores",
-            image: "/images/art21.png",
-            date: "2025-01-23"
-        },
-        {
-            dream: "梦见在梦幻般的花园中与蝴蝶共舞",
-            image: "/images/art19.png",
-            date: "2025-01-22"
-        },
-        {
-            dream: "I dreamed of a mystical forest where light dances between the trees",
-            image: "/images/art8.png",
-            date: "2025-01-21"
-        },
-        {
-            dream: "Soñé trabajando en casa con mi bebé en un mundo etéreo",
-            image: "/images/art2.webp",
-            date: "2025-01-20"
-        },
-        {
-            dream: "梦见神秘魔法师在紫色光芒中施展魔法",
-            image: "/images/art1.png",
-            date: "2025-01-19"
-        },
-        {
-            dream: "I dreamed of floating islands connected by bridges of light in a magical realm",
-            image: "/images/art18.png",
-            date: "2025-01-18"
-        },
-        {
-            dream: "梦见在神秘的水晶洞穴中发现治愈之光",
-            image: "/images/art11.png",
-            date: "2025-01-17"
-        },
-        {
-            dream: "Soñé con un jardín encantado lleno de flores luminosas",
-            image: "/images/art7.png",
-            date: "2025-01-16"
-        },
-        {
-            dream: "梦见漂浮在宁静的紫色云海中",
-            image: "/images/art5.png",
-            date: "2025-01-15"
-        },
-        {
-            dream: "Soñé con un palacio celestial rodeado de nubes doradas y luz divina",
-            image: "/images/art20.png",
-            date: "2025-01-14"
-        },
-        {
-            dream: "I dreamed of a magical underwater kingdom with golden light",
-            image: "/images/art6.jpeg",
-            date: "2025-01-13"
-        },
-        {
-            dream: "梦见在满月下静心冥想，被自然包围",
-            image: "/images/art3.png",
-            date: "2025-01-12"
-        },
-        {
-            dream: "I dreamed of soaring through ethereal clouds in a dreamlike sky",
-            image: "/images/art10.png",
-            date: "2025-01-11"
-        },
-        {
-            dream: "Soñé con un bosque encantado donde las luces danzan entre los árboles antiguos",
-            image: "/images/art17.png",
-            date: "2025-01-10"
-        },
-        {
-            dream: "梦见在彩虹桥上遇见天使般的存在",
-            image: "/images/art14.png",
-            date: "2025-01-09"
-        },
-        {
-            dream: "Soñé con montañas majestuosas y pueblos coloridos en el Himalaya",
-            image: "/images/art13.jpg",
-            date: "2025-01-08"
-        },
-        {
-            dream: "梦见在星空下的神秘城堡中探索",
-            image: "/images/art9.png",
-            date: "2025-01-07"
-        },
-        {
-            dream: "I dreamed of a peaceful meditation garden with flowing water and gentle light",
-            image: "/images/art15.jpeg",
-            date: "2025-01-06"
-        },
-        {
-            dream: "Soñé con un mundo de fantasía lleno de criaturas mágicas y paisajes encantados",
-            image: "/images/art12.png",
-            date: "2025-01-05"
-        }
+    // 使用public/images中的所有图片，按文件名排序
+    const allImages = [
+        "/images/arr22.png",
+        "/images/art1.png",
+        "/images/art2.webp",
+        "/images/art3.png",
+        "/images/art4.png",
+        "/images/art5.png",
+        "/images/art6.jpeg",
+        "/images/art7.png",
+        "/images/art8.png",
+        "/images/art9.png",
+        "/images/art10.png",
+        "/images/art11.png",
+        "/images/art12.png",
+        "/images/art13.jpg",
+        "/images/art14.png",
+        "/images/art15.jpeg",
+        "/images/art16.png",
+        "/images/art17.png",
+        "/images/art18.png",
+        "/images/art19.png",
+        "/images/art20.png",
+        "/images/art21.png"
     ];
+    
+    // 多语言梦境描述模板
+    const dreamTemplates = [
+        // 英文梦境
+        "I dreamed of an ethereal garden where time flows like water",
+        "I dreamed of a mystical forest where light dances between the trees",
+        "I dreamed of floating islands connected by bridges of light",
+        "I dreamed of soaring through ethereal clouds in a dreamlike sky",
+        "I dreamed of a peaceful meditation garden with flowing water",
+        "I dreamed of a magical underwater kingdom with golden light",
+        "I dreamed of an artist's sanctuary filled with crystals and creativity",
+        "I dreamed of a celestial palace surrounded by golden clouds",
+        "I dreamed of a mystical realm where music creates colors",
+        "I dreamed of an enchanted forest where ancient trees whisper secrets",
+        "I dreamed of a rainbow bridge leading to angelic beings",
+        "I dreamed of a crystal cave filled with healing light",
+        "I dreamed of a fantasy world with magical creatures",
+        "I dreamed of a cosmic dance of stars and galaxies",
+        "I dreamed of a sacred temple floating in the sky",
+        "I dreamed of a golden sunset over mystical mountains",
+        "I dreamed of a dreamy landscape where reality blends with fantasy",
+        "I dreamed of a magical workshop where dreams come to life",
+        "I dreamed of a serene lake reflecting the moon's glow",
+        "I dreamed of a celestial garden where flowers bloom in starlight",
+        "I dreamed of a mystical portal to another dimension",
+        "I dreamed of a peaceful sanctuary where time stands still",
+        
+        // 中文梦境
+        "梦见在神秘的极光下与星辰对话",
+        "梦见在梦幻般的花园中与蝴蝶共舞",
+        "梦见神秘魔法师在紫色光芒中施展魔法",
+        "梦见在神秘的水晶洞穴中发现治愈之光",
+        "梦见漂浮在宁静的紫色云海中",
+        "梦见在满月下静心冥想，被自然包围",
+        "梦见在彩虹桥上遇见天使般的存在",
+        "梦见在星空下的神秘城堡中探索",
+        "梦见在神秘的魔法森林中漫步",
+        "梦见在金色的云海中自由翱翔",
+        "梦见在月光下的水晶宫殿中冥想",
+        "梦见在彩虹瀑布下沐浴圣光",
+        "梦见在神秘的极地冰宫中探索",
+        "梦见在星空下的魔法花园中漫步",
+        "梦见在金色的沙漠中寻找绿洲",
+        "梦见在神秘的古代遗迹中冥想",
+        "梦见在彩虹桥上与天使对话",
+        "梦见在星空下的魔法森林中探索",
+        "梦见在金色的云海中寻找真理",
+        "梦见在月光下的水晶洞穴中冥想",
+        "梦见在神秘的魔法城堡中漫步",
+        "梦见在彩虹瀑布下寻找智慧",
+        
+        // 西班牙语梦境
+        "Soñé con un reino celestial donde la música crea colores",
+        "Soñé trabajando en casa con mi bebé en un mundo etéreo",
+        "Soñé con un jardín encantado lleno de flores luminosas",
+        "Soñé con un palacio celestial rodeado de nubes doradas y luz divina",
+        "Soñé con un bosque encantado donde las luces danzan entre los árboles antiguos",
+        "Soñé con montañas majestuosas y pueblos coloridos en el Himalaya",
+        "Soñé con un mundo de fantasía lleno de criaturas mágicas y paisajes encantados",
+        "Soñé con un santuario místico donde el tiempo se detiene",
+        "Soñé con un portal dimensional hacia reinos desconocidos",
+        "Soñé con un jardín cósmico donde las estrellas florecen",
+        "Soñé con un templo sagrado flotando en las nubes",
+        "Soñé con una danza celestial de luces y colores",
+        "Soñé con un bosque mágico donde los árboles cantan",
+        "Soñé con un lago sereno reflejando la luz lunar",
+        "Soñé con un castillo místico en las montañas doradas",
+        "Soñé con un reino submarino lleno de tesoros",
+        "Soñé con un jardín de cristal donde la paz reina",
+        "Soñé con un puente arcoíris hacia la eternidad",
+        "Soñé con una cueva de cristal llena de sabiduría",
+        "Soñé con un palacio de hielo en el polo norte",
+        "Soñé con un desierto dorado donde el tiempo se pierde",
+        "Soñé con un santuario místico en las alturas"
+    ];
+    
+    // 生成随机日期（最近30天内）
+    function getRandomDate() {
+        const now = new Date();
+        const daysAgo = Math.floor(Math.random() * 30);
+        const date = new Date(now.getTime() - (daysAgo * 24 * 60 * 60 * 1000));
+        return date.toISOString().split('T')[0];
+    }
+    
+    // 创建gallery项目
+    const sampleDreams = allImages.map((image, index) => {
+        const dreamIndex = index % dreamTemplates.length;
+        return {
+            dream: dreamTemplates[dreamIndex],
+            image: image,
+            date: getRandomDate()
+        };
+    });
     
     if (sampleDreams.length > 0) {
         galleryPlaceholder.style.display = 'none';

@@ -81,8 +81,8 @@ Thumbs.db
 tmp/
 temp/
 
-# Railway specific
-.railway/
+# Vercel specific
+.vercel/
 
 # Test files
 test-*.html

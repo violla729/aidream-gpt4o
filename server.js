@@ -17,6 +17,7 @@ app.use('/public', express.static(path.join(__dirname, 'public')));
 
 // 根路径处理 - 确保index.html能被正确访问
 app.get('/', (req, res) => {
+    console.log('根路径请求，返回index.html');
     res.sendFile(path.join(__dirname, 'index.html'));
 });
 
