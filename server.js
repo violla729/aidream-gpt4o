@@ -133,29 +133,62 @@ app.post('/api/analyze-dream', async (req, res) => {
         
         console.log(`[${new Date().toISOString()}] 准备调用DeepSeek API...`);
 
-        const response = await axios.post('https://api.deepseek.com/v1/chat/completions', {
-            model: 'deepseek-chat',
-            messages: [
-                {
-                    role: 'system',
-                    content: languagePrompts.systemMessage
-                },
-                {
-                    role: 'user',
-                    content: prompt
-                }
-            ],
-            max_tokens: 800, // 减少token数量以加快响应
-            temperature: 0.7
-        }, {
+        // 创建axios实例，配置重试机制
+        const axiosInstance = axios.create({
+            timeout: 90000, // 90秒超时
             headers: {
                 'Authorization': `Bearer ${DEEPSEEK_API_KEY}`,
                 'Content-Type': 'application/json'
-            },
-            timeout: 60000, // 增加到60秒超时
-            retry: 1, // 添加重试机制
-            retryDelay: 1000
+            }
         });
+
+        // 添加请求拦截器，记录请求开始时间
+        const startTime = Date.now();
+        console.log(`[${new Date().toISOString()}] 开始API请求，超时时间: 90秒`);
+
+        // 简单的重试机制
+        let response;
+        let lastError;
+        
+        for (let attempt = 1; attempt <= 2; attempt++) {
+            try {
+                console.log(`[${new Date().toISOString()}] 第${attempt}次尝试调用DeepSeek API...`);
+                
+                response = await axiosInstance.post('https://api.deepseek.com/v1/chat/completions', {
+                    model: 'deepseek-chat',
+                    messages: [
+                        {
+                            role: 'system',
+                            content: languagePrompts.systemMessage
+                        },
+                        {
+                            role: 'user',
+                            content: prompt
+                        }
+                    ],
+                    max_tokens: 600, // 进一步减少token数量
+                    temperature: 0.7,
+                    stream: false // 确保不使用流式响应
+                });
+                
+                const endTime = Date.now();
+                console.log(`[${new Date().toISOString()}] API请求完成，耗时: ${endTime - startTime}ms`);
+                break; // 成功则跳出循环
+                
+            } catch (error) {
+                lastError = error;
+                console.error(`[${new Date().toISOString()}] 第${attempt}次尝试失败:`, error.message);
+                
+                if (attempt < 2) {
+                    console.log(`[${new Date().toISOString()}] 等待2秒后重试...`);
+                    await new Promise(resolve => setTimeout(resolve, 2000));
+                }
+            }
+        }
+        
+        if (!response) {
+            throw lastError; // 如果所有尝试都失败，抛出最后一个错误
+        }
         
         console.log(`[${new Date().toISOString()}] DeepSeek API调用成功`);
         
